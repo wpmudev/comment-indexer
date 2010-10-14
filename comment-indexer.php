@@ -1,16 +1,16 @@
 <?php
 /*
 Plugin Name: Comment Indexer
-Plugin URI: 
-Description:
+Plugin URI: http://premium.wpmudev.org/project/comment-indexer
+Description: Indexes comments into a global table
 Author: Andrew Billits (Incsub)
-Version: 1.0.4
-Author URI:
+Version: 1.0.5
+Author URI: http://premium.wpmudev.org/
 WDP ID: 28
 */
 
 /* 
-Copyright 2007-2009 Incsub (http://incsub.com)
+Copyright 2007-2010 Incsub (http://incsub.com)
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License (Version 2 - GPLv2) as published by
@@ -26,7 +26,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-$comment_indexer_current_version = '1.0.4';
+$comment_indexer_current_version = '1.0.5';
 //------------------------------------------------------------------------//
 //---Config---------------------------------------------------------------//
 //------------------------------------------------------------------------//
@@ -218,13 +218,32 @@ function comment_indexer_comment_insert_update($tmp_comment_ID){
 		
 		//get sort terms
 		$tmp_sort_terms = comment_indexer_get_sort_terms($wpdb->blogid);
+		
 		//comment does not exist - insert site comment
-
-		$wpdb->query("INSERT IGNORE INTO " . $wpdb->base_prefix . "site_comments
-		(blog_id, site_id, sort_terms, blog_public, comment_approved, comment_id, comment_post_id, comment_post_permalink, comment_author, comment_author_email, comment_author_IP, comment_author_url, comment_author_user_id, comment_content, comment_content_stripped, comment_karma, comment_agent, comment_type, comment_parent, comment_date_gmt, comment_date_stamp)
-		VALUES
-		('" . $wpdb->blogid . "','" . $wpdb->siteid . "','" . $tmp_sort_terms . "','" . $tmp_blog_public . "','" . $tmp_comment->comment_approved . "','" . $tmp_comment_ID . "','" . $tmp_comment->comment_post_ID . "','" . get_permalink($tmp_comment->comment_post_ID) . "','" .  $tmp_comment->comment_author . "','" . $tmp_comment->comment_author_email . "','" . $tmp_comment->comment_author_IP . "','" . $tmp_comment->comment_author_url . "','" . $tmp_comment->user_id . "','" . addslashes($tmp_comment->comment_content) . "','" . addslashes(comment_indexer_strip_content($tmp_comment->comment_content)) . "','" . $tmp_comment->comment_karma . "','" . $tmp_comment->comment_agent . "','" . $tmp_comment->comment_type . "','" . $tmp_comment->comment_parent . "','" . $tmp_comment->comment_date_gmt . "','" . time() . "')");
-	}
+    $wpdb->insert( $wpdb->base_prefix . "site_comments", array(
+      'blog_id' => $wpdb->blogid,
+      'site_id' => $wpdb->siteid,
+      'sort_terms' => $tmp_sort_terms,
+      'blog_public' => $tmp_blog_public,
+      'comment_approved' => $tmp_comment->comment_approved,
+      'comment_id' => $tmp_comment_ID,
+      'comment_post_id' => $tmp_comment->comment_post_ID,
+      'comment_post_permalink' => get_permalink($tmp_comment->comment_post_ID),
+      'comment_author' => $tmp_comment->comment_author,
+      'comment_author_email' => $tmp_comment->comment_author_email,
+      'comment_author_IP' => $tmp_comment->comment_author_IP,
+      'comment_author_url' => $tmp_comment->comment_author_url,
+      'comment_author_user_id' => $tmp_comment->user_id,
+      'comment_content' => $tmp_comment->comment_content,
+      'comment_content_stripped' => comment_indexer_strip_content($tmp_comment->comment_content),
+      'comment_karma' => $tmp_comment->comment_karma,
+      'comment_agent' => $tmp_comment->comment_agent,
+      'comment_type' => $tmp_comment->comment_type,
+      'comment_parent' => $tmp_comment->comment_parent,
+      'comment_date_gmt' => $tmp_comment->comment_date_gmt,
+      'comment_date_stamp' => time()
+    ));
+  }
 }
 
 function comment_indexer_delete($tmp_comment_ID){
