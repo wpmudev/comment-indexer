@@ -1,30 +1,27 @@
-Plugin Name: Comment Indexer
-Author: Andrew Billits
+=== Admin Comment Indexer ===
+Authors: Ivan Shaovchev, Andrew Billits (Incsub)
 
-Change Log:
-----------------------------------------------------------------------
-----------------------------------------------------------------------
+== Changelog ==
 
-1.0.5 - 10/14/2010
-----------------------------------------------------------------------
-- Minor bug fixes.
+= 1.0.6 =
+* Compatibility update for WordPress 3.1
+* Bug fixes.
 
-1.0.4 - 03/09/2010
-----------------------------------------------------------------------
-- Minor bug fixes.
+= 1.0.5 =
+* Minor bug fixes.
 
-1.0.3 - 12/17/2009
-----------------------------------------------------------------------
-- Adding Update Notifications Support
+= 1.0.4 =
+* Minor bug fixes.
 
-1.0.2 - 06/29/2009
-----------------------------------------------------------------------
-- Fixed comment_auther type.
+= 1.0.3 =
+* Adding Update Notifications Support
 
-1.0.1 - 03/02/2009
-----------------------------------------------------------------------
-- Fixed duplicate comments issue.
+= 1.0.2 =
+* Fixed comment_auther type.
 
-1.0.0 - 08/11/2008
-----------------------------------------------------------------------
-- Initial Release.
+= 1.0.1 =
+* Fixed duplicate comments issue.
+
+= 1.0.0 =
+* Initial Release.
+

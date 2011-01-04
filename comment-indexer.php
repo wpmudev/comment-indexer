@@ -3,14 +3,15 @@
 Plugin Name: Comment Indexer
 Plugin URI: http://premium.wpmudev.org/project/comment-indexer
 Description: Indexes comments into a global table
-Author: Andrew Billits (Incsub)
-Version: 1.0.5
-Author URI: http://premium.wpmudev.org/
+Author: Ivan Shaovchev & Andrew Billits (Incsub)
+Author URI: http://ivan.sh
+Version: 1.0.6
+Network: true
 WDP ID: 28
 */
 
 /* 
-Copyright 2007-2010 Incsub (http://incsub.com)
+Copyright 2007-2011 Incsub (http://incsub.com)
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License (Version 2 - GPLv2) as published by
@@ -26,16 +27,18 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-$comment_indexer_current_version = '1.0.5';
 //------------------------------------------------------------------------//
 //---Config---------------------------------------------------------------//
 //------------------------------------------------------------------------//
 
+$comment_indexer_current_version = '1.0.6';
+
 //------------------------------------------------------------------------//
 //---Hook-----------------------------------------------------------------//
 //------------------------------------------------------------------------//
+
 //check for activating
-if ($_GET['key'] == '' || $_GET['key'] === ''){
+if ( empty( $_GET['key'] ) ) {
 	add_action('admin_head', 'comment_indexer_make_current');
 }
 //index comments
@@ -52,9 +55,11 @@ add_action('blog_privacy_selector', 'comment_indexer_public_update');
 add_action('delete_blog', 'comment_indexer_change_remove', 10, 1);
 //update blog types
 add_action('blog_types_update', 'comment_indexer_sort_terms_update');
+
 //------------------------------------------------------------------------//
 //---Functions------------------------------------------------------------//
 //------------------------------------------------------------------------//
+
 function comment_indexer_make_current() {
 	global $wpdb, $comment_indexer_current_version;
 	if (get_site_option( "comment_indexer_version" ) == '') {
@@ -69,6 +74,7 @@ function comment_indexer_make_current() {
 		update_site_option( "comment_indexer_version", $comment_indexer_current_version );
 	}
 	comment_indexer_global_install();
+    
 	//--------------------------------------------------//
 	if (get_option( "comment_indexer_version" ) == '') {
 		add_option( 'comment_indexer_version', '0.0.0' );
@@ -79,88 +85,70 @@ function comment_indexer_make_current() {
 	} else {
 		//update to current version
 		update_option( "comment_indexer_version", $comment_indexer_current_version );
-		comment_indexer_blog_install();
 	}
-}
-
-function comment_indexer_blog_install() {
-	global $wpdb, $comment_indexer_current_version;
-	//$comment_indexer_table1 = "";
-	//$wpdb->query( $comment_indexer_table1 );
 }
 
 function comment_indexer_global_install() {
 	global $wpdb, $comment_indexer_current_version;
-	if (get_site_option( "comment_indexer_installed" ) == '') {
+	if ( get_site_option( "comment_indexer_installed" ) == '' ) {
 		add_site_option( 'comment_indexer_installed', 'no' );
 	}
 	
-	if (get_site_option( "comment_indexer_installed" ) == "yes") {
-		// do nothing
-	} else {
-	
+	if ( !get_site_option( "comment_indexer_installed" ) == "yes" ) {
 		$comment_indexer_table1 = "CREATE TABLE IF NOT EXISTS `" . $wpdb->base_prefix . "site_comments` (
-  `site_comment_id` bigint(20) unsigned NOT NULL auto_increment,
-  `blog_id` bigint(20),
-  `site_id` bigint(20),
-  `sort_terms` TEXT,
-  `blog_public` int(2),
-  `comment_approved` VARCHAR(255),
-  `comment_id` bigint(20),
-  `comment_post_id` bigint(20),
-  `comment_post_permalink` TEXT,
-  `comment_author` VARCHAR(60),
-  `comment_author_email` VARCHAR(255),
-  `comment_author_IP` VARCHAR(255),
-  `comment_author_url` VARCHAR(50),
-  `comment_author_user_id` bigint(20),
-  `comment_content` TEXT,
-  `comment_content_stripped` TEXT,
-  `comment_karma` VARCHAR(255),
-  `comment_agent` VARCHAR(255),
-  `comment_type` VARCHAR(255),
-  `comment_parent` VARCHAR(255),
-  `comment_date_gmt` datetime NOT NULL default '0000-00-00 00:00:00',
-  `comment_date_stamp` VARCHAR(255),
-  PRIMARY KEY  (`site_comment_id`)
-) ENGINE=MyISAM  DEFAULT CHARSET=utf8;";
-		$comment_indexer_table2 = "";
-		$comment_indexer_table3 = "";
-		$comment_indexer_table4 = "";
-		$comment_indexer_table5 = "";
-
+          `site_comment_id` bigint(20) unsigned NOT NULL auto_increment,
+          `blog_id` bigint(20),
+          `site_id` bigint(20),
+          `sort_terms` TEXT,
+          `blog_public` int(2),
+          `comment_approved` VARCHAR(255),
+          `comment_id` bigint(20),
+          `comment_post_id` bigint(20),
+          `comment_post_permalink` TEXT,
+          `comment_author` VARCHAR(60),
+          `comment_author_email` VARCHAR(255),
+          `comment_author_IP` VARCHAR(255),
+          `comment_author_url` VARCHAR(50),
+          `comment_author_user_id` bigint(20),
+          `comment_content` TEXT,
+          `comment_content_stripped` TEXT,
+          `comment_karma` VARCHAR(255),
+          `comment_agent` VARCHAR(255),
+          `comment_type` VARCHAR(255),
+          `comment_parent` VARCHAR(255),
+          `comment_date_gmt` datetime NOT NULL default '0000-00-00 00:00:00',
+          `comment_date_stamp` VARCHAR(255),
+          PRIMARY KEY  (`site_comment_id`)
+        ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;";
+        
 		$wpdb->query( $comment_indexer_table1 );
-		$wpdb->query( $comment_indexer_table2 );
-		//$wpdb->query( $comment_indexer_table3 );
-		//$wpdb->query( $comment_indexer_table4 );
-		//$wpdb->query( $comment_indexer_table5 );
 		update_site_option( "comment_indexer_installed", "yes" );
 	}
 }
 
 function comment_indexer_update_comment_status($tmp_comment_ID, $tmp_comment_status){
-  global $wpdb;
-  
-  switch ( $tmp_comment_status ) {
-  case 'hold':
-    $query = "UPDATE " . $wpdb->base_prefix . "site_comments SET comment_approved='0' WHERE comment_id ='" . $tmp_comment_ID . "' and blog_id = '" . $wpdb->blogid . "' LIMIT 1";
-    break;
-  case 'approve':
-    $query = "UPDATE " . $wpdb->base_prefix . "site_comments SET comment_approved='1' WHERE comment_id ='" . $tmp_comment_ID . "' and blog_id = '" . $wpdb->blogid . "' LIMIT 1";
-    break;
-  case 'spam':
-    $query = "UPDATE " . $wpdb->base_prefix . "site_comments SET comment_approved='spam' WHERE comment_id ='" . $tmp_comment_ID . "' and blog_id = '" . $wpdb->blogid . "' LIMIT 1";
-    break;
-  case 'delete':
-	comment_indexer_delete($tmp_comment_ID);
-    return true;
-    break;
-  default:
-    return false;
-  }
+    global $wpdb;
 
-  if ( !$wpdb->query($query) )
-    return false;
+    switch ( $tmp_comment_status ) {
+        case 'hold':
+            $query = "UPDATE " . $wpdb->base_prefix . "site_comments SET comment_approved='0' WHERE comment_id ='" . $tmp_comment_ID . "' and blog_id = '" . $wpdb->blogid . "' LIMIT 1";
+            break;
+        case 'approve':
+            $query = "UPDATE " . $wpdb->base_prefix . "site_comments SET comment_approved='1' WHERE comment_id ='" . $tmp_comment_ID . "' and blog_id = '" . $wpdb->blogid . "' LIMIT 1";
+            break;
+        case 'spam':
+            $query = "UPDATE " . $wpdb->base_prefix . "site_comments SET comment_approved='spam' WHERE comment_id ='" . $tmp_comment_ID . "' and blog_id = '" . $wpdb->blogid . "' LIMIT 1";
+            break;
+        case 'delete':
+            comment_indexer_delete($tmp_comment_ID);
+            return true;
+            break;
+        default:
+            return false;
+    }
+
+    if ( !$wpdb->query($query) )
+        return false;
 }
 
 function comment_indexer_get_sort_terms($tmp_blog_ID){
@@ -220,29 +208,29 @@ function comment_indexer_comment_insert_update($tmp_comment_ID){
 		$tmp_sort_terms = comment_indexer_get_sort_terms($wpdb->blogid);
 		
 		//comment does not exist - insert site comment
-    $wpdb->insert( $wpdb->base_prefix . "site_comments", array(
-      'blog_id' => $wpdb->blogid,
-      'site_id' => $wpdb->siteid,
-      'sort_terms' => $tmp_sort_terms,
-      'blog_public' => $tmp_blog_public,
-      'comment_approved' => $tmp_comment->comment_approved,
-      'comment_id' => $tmp_comment_ID,
-      'comment_post_id' => $tmp_comment->comment_post_ID,
-      'comment_post_permalink' => get_permalink($tmp_comment->comment_post_ID),
-      'comment_author' => $tmp_comment->comment_author,
-      'comment_author_email' => $tmp_comment->comment_author_email,
-      'comment_author_IP' => $tmp_comment->comment_author_IP,
-      'comment_author_url' => $tmp_comment->comment_author_url,
-      'comment_author_user_id' => $tmp_comment->user_id,
-      'comment_content' => $tmp_comment->comment_content,
-      'comment_content_stripped' => comment_indexer_strip_content($tmp_comment->comment_content),
-      'comment_karma' => $tmp_comment->comment_karma,
-      'comment_agent' => $tmp_comment->comment_agent,
-      'comment_type' => $tmp_comment->comment_type,
-      'comment_parent' => $tmp_comment->comment_parent,
-      'comment_date_gmt' => $tmp_comment->comment_date_gmt,
-      'comment_date_stamp' => time()
-    ));
+        $wpdb->insert( $wpdb->base_prefix . "site_comments", array(
+          'blog_id' => $wpdb->blogid,
+          'site_id' => $wpdb->siteid,
+          'sort_terms' => $tmp_sort_terms,
+          'blog_public' => $tmp_blog_public,
+          'comment_approved' => $tmp_comment->comment_approved,
+          'comment_id' => $tmp_comment_ID,
+          'comment_post_id' => $tmp_comment->comment_post_ID,
+          'comment_post_permalink' => get_permalink($tmp_comment->comment_post_ID),
+          'comment_author' => $tmp_comment->comment_author,
+          'comment_author_email' => $tmp_comment->comment_author_email,
+          'comment_author_IP' => $tmp_comment->comment_author_IP,
+          'comment_author_url' => $tmp_comment->comment_author_url,
+          'comment_author_user_id' => $tmp_comment->user_id,
+          'comment_content' => $tmp_comment->comment_content,
+          'comment_content_stripped' => comment_indexer_strip_content($tmp_comment->comment_content),
+          'comment_karma' => $tmp_comment->comment_karma,
+          'comment_agent' => $tmp_comment->comment_agent,
+          'comment_type' => $tmp_comment->comment_type,
+          'comment_parent' => $tmp_comment->comment_parent,
+          'comment_date_gmt' => $tmp_comment->comment_date_gmt,
+          'comment_date_stamp' => time()
+        ));
   }
 }
 
@@ -297,5 +285,17 @@ function comment_indexer_strip_content($tmp_content){
 	$tmp_content = strip_tags($tmp_content);
 	return $tmp_content;
 }
+
+/*
+ * Update Notifications Notice
+ */
+if ( !function_exists( 'wdp_un_check' ) ):
+function wdp_un_check() {
+    if ( !class_exists('WPMUDEV_Update_Notifications') && current_user_can('edit_users') )
+        echo '<div class="error fade"><p>' . __('Please install the latest version of <a href="http://premium.wpmudev.org/project/update-notifications/" title="Download Now &raquo;">our free Update Notifications plugin</a> which helps you stay up-to-date with the most stable, secure versions of WPMU DEV themes and plugins. <a href="http://premium.wpmudev.org/wpmu-dev/update-notifications-plugin-information/">More information &raquo;</a>', 'wpmudev') . '</a></p></div>';
+}
+add_action( 'admin_notices', 'wdp_un_check', 5 );
+add_action( 'network_admin_notices', 'wdp_un_check', 5 );
+endif; 
 
 ?>
