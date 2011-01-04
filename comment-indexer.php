@@ -5,7 +5,7 @@ Plugin URI: http://premium.wpmudev.org/project/comment-indexer
 Description: Indexes comments into a global table
 Author: Ivan Shaovchev & Andrew Billits (Incsub)
 Author URI: http://ivan.sh
-Version: 1.0.7
+Version: 1.0.8
 Network: true
 WDP ID: 27
 */
