@@ -5,7 +5,7 @@ Plugin URI: http://premium.wpmudev.org/project/comment-indexer
 Description: Indexes comments into a global table
 Author: Ivan Shaovchev & Andrew Billits (Incsub)
 Author URI: http://ivan.sh
-Version: 1.0.6
+Version: 1.0.7
 Network: true
 WDP ID: 28
 */
@@ -31,16 +31,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 //---Config---------------------------------------------------------------//
 //------------------------------------------------------------------------//
 
-$comment_indexer_current_version = '1.0.6';
-
 //------------------------------------------------------------------------//
 //---Hook-----------------------------------------------------------------//
 //------------------------------------------------------------------------//
 
-//check for activating
-if ( empty( $_GET['key'] ) ) {
-	add_action('admin_head', 'comment_indexer_make_current');
-}
+register_activation_hook( __FILE__, 'comment_indexer_global_install' );
+
 //index comments
 add_action('comment_post', 'comment_indexer_comment_insert_update');
 add_action('edit_comment', 'comment_indexer_comment_insert_update');
@@ -60,70 +56,36 @@ add_action('blog_types_update', 'comment_indexer_sort_terms_update');
 //---Functions------------------------------------------------------------//
 //------------------------------------------------------------------------//
 
-function comment_indexer_make_current() {
-	global $wpdb, $comment_indexer_current_version;
-	if (get_site_option( "comment_indexer_version" ) == '') {
-		add_site_option( 'comment_indexer_version', '0.0.0' );
-	}
-	
-	if (get_site_option( "comment_indexer_version" ) == $comment_indexer_current_version) {
-		// do nothing
-	} else {
-		//update to current version
-		update_site_option( "comment_indexer_installed", "no" );
-		update_site_option( "comment_indexer_version", $comment_indexer_current_version );
-	}
-	comment_indexer_global_install();
-    
-	//--------------------------------------------------//
-	if (get_option( "comment_indexer_version" ) == '') {
-		add_option( 'comment_indexer_version', '0.0.0' );
-	}
-	
-	if (get_option( "comment_indexer_version" ) == $comment_indexer_current_version) {
-		// do nothing
-	} else {
-		//update to current version
-		update_option( "comment_indexer_version", $comment_indexer_current_version );
-	}
-}
-
 function comment_indexer_global_install() {
-	global $wpdb, $comment_indexer_current_version;
-	if ( get_site_option( "comment_indexer_installed" ) == '' ) {
-		add_site_option( 'comment_indexer_installed', 'no' );
-	}
+	global $wpdb;
 	
-	if ( !get_site_option( "comment_indexer_installed" ) == "yes" ) {
-		$comment_indexer_table1 = "CREATE TABLE IF NOT EXISTS `" . $wpdb->base_prefix . "site_comments` (
-          `site_comment_id` bigint(20) unsigned NOT NULL auto_increment,
-          `blog_id` bigint(20),
-          `site_id` bigint(20),
-          `sort_terms` TEXT,
-          `blog_public` int(2),
-          `comment_approved` VARCHAR(255),
-          `comment_id` bigint(20),
-          `comment_post_id` bigint(20),
-          `comment_post_permalink` TEXT,
-          `comment_author` VARCHAR(60),
-          `comment_author_email` VARCHAR(255),
-          `comment_author_IP` VARCHAR(255),
-          `comment_author_url` VARCHAR(50),
-          `comment_author_user_id` bigint(20),
-          `comment_content` TEXT,
-          `comment_content_stripped` TEXT,
-          `comment_karma` VARCHAR(255),
-          `comment_agent` VARCHAR(255),
-          `comment_type` VARCHAR(255),
-          `comment_parent` VARCHAR(255),
-          `comment_date_gmt` datetime NOT NULL default '0000-00-00 00:00:00',
-          `comment_date_stamp` VARCHAR(255),
-          PRIMARY KEY  (`site_comment_id`)
-        ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;";
-        
-		$wpdb->query( $comment_indexer_table1 );
-		update_site_option( "comment_indexer_installed", "yes" );
-	}
+    $comment_indexer_table1 = "CREATE TABLE IF NOT EXISTS `" . $wpdb->base_prefix . "site_comments` (
+      `site_comment_id` bigint(20) unsigned NOT NULL auto_increment,
+      `blog_id` bigint(20),
+      `site_id` bigint(20),
+      `sort_terms` TEXT,
+      `blog_public` int(2),
+      `comment_approved` VARCHAR(255),
+      `comment_id` bigint(20),
+      `comment_post_id` bigint(20),
+      `comment_post_permalink` TEXT,
+      `comment_author` VARCHAR(60),
+      `comment_author_email` VARCHAR(255),
+      `comment_author_IP` VARCHAR(255),
+      `comment_author_url` VARCHAR(50),
+      `comment_author_user_id` bigint(20),
+      `comment_content` TEXT,
+      `comment_content_stripped` TEXT,
+      `comment_karma` VARCHAR(255),
+      `comment_agent` VARCHAR(255),
+      `comment_type` VARCHAR(255),
+      `comment_parent` VARCHAR(255),
+      `comment_date_gmt` datetime NOT NULL default '0000-00-00 00:00:00',
+      `comment_date_stamp` VARCHAR(255),
+      PRIMARY KEY  (`site_comment_id`)
+    ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;";
+
+    $wpdb->query( $comment_indexer_table1 );
 }
 
 function comment_indexer_update_comment_status($tmp_comment_ID, $tmp_comment_status){
