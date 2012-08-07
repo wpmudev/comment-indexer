@@ -1,7 +1,10 @@
-=== Admin Comment Indexer ===
-Authors: Ivan Shaovchev, Andrew Billits (Incsub)
+----------------------------------------------------------------------
+Comment Indexer
+Authors: Paul Menard (Incsub)
+----------------------------------------------------------------------
 
-== Changelog ==
+= 1.0.8 =
+2012/08/07: Added support for trash/untrash comment handling. 
 
 = 1.0.6 =
 * Compatibility update for WordPress 3.1

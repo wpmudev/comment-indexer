@@ -3,9 +3,9 @@
 Plugin Name: Comment Indexer
 Plugin URI: http://premium.wpmudev.org/project/comment-indexer
 Description: Indexes comments into a global table
-Author: Ivan Shaovchev & Andrew Billits (Incsub)
-Author URI: http://ivan.sh
-Version: 1.0.8
+Author: Paul Menard (Incsub)
+Author URI: http://premium.wpmudev.org
+Version: 1.0.9
 Network: true
 WDP ID: 27
 */
@@ -26,6 +26,11 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
+//------------------------------------------------------------------------//
+//---Externals------------------------------------------------------------//
+//------------------------------------------------------------------------//
+include_once( dirname(__FILE__) . '/lib/dash-notices/wpmudev-dash-notification.php' );
 
 //------------------------------------------------------------------------//
 //---Config---------------------------------------------------------------//
@@ -51,6 +56,7 @@ add_action('blog_privacy_selector', 'comment_indexer_public_update');
 add_action('delete_blog', 'comment_indexer_change_remove', 10, 1);
 //update blog types
 add_action('blog_types_update', 'comment_indexer_sort_terms_update');
+
 
 //------------------------------------------------------------------------//
 //---Functions------------------------------------------------------------//
@@ -92,19 +98,29 @@ function comment_indexer_update_comment_status($tmp_comment_ID, $tmp_comment_sta
     global $wpdb;
 
     switch ( $tmp_comment_status ) {
+		case '0':
         case 'hold':
             $query = "UPDATE " . $wpdb->base_prefix . "site_comments SET comment_approved='0' WHERE comment_id ='" . $tmp_comment_ID . "' and blog_id = '" . $wpdb->blogid . "' LIMIT 1";
             break;
+
+		case '1':
         case 'approve':
             $query = "UPDATE " . $wpdb->base_prefix . "site_comments SET comment_approved='1' WHERE comment_id ='" . $tmp_comment_ID . "' and blog_id = '" . $wpdb->blogid . "' LIMIT 1";
             break;
+
         case 'spam':
             $query = "UPDATE " . $wpdb->base_prefix . "site_comments SET comment_approved='spam' WHERE comment_id ='" . $tmp_comment_ID . "' and blog_id = '" . $wpdb->blogid . "' LIMIT 1";
             break;
+
+		case 'trash':
+    		$query = "UPDATE " . $wpdb->base_prefix . "site_comments SET comment_approved='trash' WHERE comment_id ='" . $tmp_comment_ID . "' and blog_id = '" . $wpdb->blogid . "' LIMIT 1";
+    		break;
+
         case 'delete':
             comment_indexer_delete($tmp_comment_ID);
             return true;
             break;
+
         default:
             return false;
     }
@@ -247,17 +263,3 @@ function comment_indexer_strip_content($tmp_content){
 	$tmp_content = strip_tags($tmp_content);
 	return $tmp_content;
 }
-
-/*
- * Update Notifications Notice
- */
-if ( !function_exists( 'wdp_un_check' ) ):
-function wdp_un_check() {
-    if ( !class_exists('WPMUDEV_Update_Notifications') && current_user_can('edit_users') )
-        echo '<div class="error fade"><p>' . __('Please install the latest version of <a href="http://premium.wpmudev.org/project/update-notifications/" title="Download Now &raquo;">our free Update Notifications plugin</a> which helps you stay up-to-date with the most stable, secure versions of WPMU DEV themes and plugins. <a href="http://premium.wpmudev.org/wpmu-dev/update-notifications-plugin-information/">More information &raquo;</a>', 'wpmudev') . '</a></p></div>';
-}
-add_action( 'admin_notices', 'wdp_un_check', 5 );
-add_action( 'network_admin_notices', 'wdp_un_check', 5 );
-endif; 
-
-?>
