@@ -5,7 +5,7 @@ Plugin URI: http://premium.wpmudev.org/project/comment-indexer
 Description: Indexes comments into a global table
 Author: Paul Menard (Incsub)
 Author URI: http://premium.wpmudev.org
-Version: 1.0.9
+Version: 1.0.9.1
 Network: true
 WDP ID: 27
 */
@@ -97,36 +97,54 @@ function comment_indexer_global_install() {
 function comment_indexer_update_comment_status($tmp_comment_ID, $tmp_comment_status){
     global $wpdb;
 
+	if (!$tmp_comment_status)
+		$tmp_comment_status = '0';
+	
+	$new_comment_status = '';
     switch ( $tmp_comment_status ) {
-		case '0':
-        case 'hold':
-            $query = "UPDATE " . $wpdb->base_prefix . "site_comments SET comment_approved='0' WHERE comment_id ='" . $tmp_comment_ID . "' and blog_id = '" . $wpdb->blogid . "' LIMIT 1";
-            break;
-
 		case '1':
         case 'approve':
-            $query = "UPDATE " . $wpdb->base_prefix . "site_comments SET comment_approved='1' WHERE comment_id ='" . $tmp_comment_ID . "' and blog_id = '" . $wpdb->blogid . "' LIMIT 1";
+            //$query = "UPDATE " . $wpdb->base_prefix . "site_comments SET comment_approved='1' WHERE comment_id ='" . $tmp_comment_ID . "' and blog_id = '" . $wpdb->blogid . "' LIMIT 1";
+			$new_comment_status = '1';
             break;
 
         case 'spam':
-            $query = "UPDATE " . $wpdb->base_prefix . "site_comments SET comment_approved='spam' WHERE comment_id ='" . $tmp_comment_ID . "' and blog_id = '" . $wpdb->blogid . "' LIMIT 1";
+            //$query = "UPDATE " . $wpdb->base_prefix . "site_comments SET comment_approved='spam' WHERE comment_id ='" . $tmp_comment_ID . "' and blog_id = '" . $wpdb->blogid . "' LIMIT 1";
+			$new_comment_status = 'spam';
             break;
 
 		case 'trash':
-    		$query = "UPDATE " . $wpdb->base_prefix . "site_comments SET comment_approved='trash' WHERE comment_id ='" . $tmp_comment_ID . "' and blog_id = '" . $wpdb->blogid . "' LIMIT 1";
+    		//$query = "UPDATE " . $wpdb->base_prefix . "site_comments SET comment_approved='trash' WHERE comment_id ='" . $tmp_comment_ID . "' and blog_id = '" . $wpdb->blogid . "' LIMIT 1";
+			$new_comment_status = 'trash';
+			
     		break;
 
         case 'delete':
             comment_indexer_delete($tmp_comment_ID);
-            return true;
+            //return true;
             break;
 
+		case '0':
+        case 'hold':
         default:
-            return false;
+			//$query = "UPDATE " . $wpdb->base_prefix . "site_comments SET comment_approved='0' WHERE comment_id ='" . $tmp_comment_ID . "' and blog_id = '" . $wpdb->blogid . "' LIMIT 1";
+			$new_comment_status = '0';
+			break;
+
     }
 
-    if ( !$wpdb->query($query) )
-        return false;
+	if ($new_comment_status != '') {
+		$wpdb->update($wpdb->base_prefix . "site_comments",
+			array(
+				'comment_approved'	=>	$new_comment_status
+			), 
+			array(
+				'comment_id'		=>	$tmp_comment_ID,
+				'blog_id'			=>	$wpdb->blogid
+			), array('%s'), array('%d', '%d')
+		);
+	}
+	return false;
 }
 
 function comment_indexer_get_sort_terms($tmp_blog_ID){
@@ -186,60 +204,102 @@ function comment_indexer_comment_insert_update($tmp_comment_ID){
 		$tmp_sort_terms = comment_indexer_get_sort_terms($wpdb->blogid);
 		
 		//comment does not exist - insert site comment
-        $wpdb->insert( $wpdb->base_prefix . "site_comments", array(
-          'blog_id' => $wpdb->blogid,
-          'site_id' => $wpdb->siteid,
-          'sort_terms' => $tmp_sort_terms,
-          'blog_public' => $tmp_blog_public,
-          'comment_approved' => $tmp_comment->comment_approved,
-          'comment_id' => $tmp_comment_ID,
-          'comment_post_id' => $tmp_comment->comment_post_ID,
-          'comment_post_permalink' => get_permalink($tmp_comment->comment_post_ID),
-          'comment_author' => $tmp_comment->comment_author,
-          'comment_author_email' => $tmp_comment->comment_author_email,
-          'comment_author_IP' => $tmp_comment->comment_author_IP,
-          'comment_author_url' => $tmp_comment->comment_author_url,
-          'comment_author_user_id' => $tmp_comment->user_id,
-          'comment_content' => $tmp_comment->comment_content,
-          'comment_content_stripped' => comment_indexer_strip_content($tmp_comment->comment_content),
-          'comment_karma' => $tmp_comment->comment_karma,
-          'comment_agent' => $tmp_comment->comment_agent,
-          'comment_type' => $tmp_comment->comment_type,
-          'comment_parent' => $tmp_comment->comment_parent,
-          'comment_date_gmt' => $tmp_comment->comment_date_gmt,
-          'comment_date_stamp' => time()
-        ));
+        $wpdb->insert( $wpdb->base_prefix . "site_comments", 
+			array(
+          		'blog_id' => $wpdb->blogid,
+          		'site_id' => $wpdb->siteid,
+          		'sort_terms' => $tmp_sort_terms,
+          		'blog_public' => $tmp_blog_public,
+          		'comment_approved' => $tmp_comment->comment_approved,
+          		'comment_id' => $tmp_comment_ID,
+          		'comment_post_id' => $tmp_comment->comment_post_ID,
+          		'comment_post_permalink' => get_permalink($tmp_comment->comment_post_ID),
+          		'comment_author' => $tmp_comment->comment_author,
+          		'comment_author_email' => $tmp_comment->comment_author_email,
+          		'comment_author_IP' => $tmp_comment->comment_author_IP,
+          		'comment_author_url' => $tmp_comment->comment_author_url,
+          		'comment_author_user_id' => $tmp_comment->user_id,
+          		'comment_content' => $tmp_comment->comment_content,
+          		'comment_content_stripped' => comment_indexer_strip_content($tmp_comment->comment_content),
+          		'comment_karma' => $tmp_comment->comment_karma,
+          		'comment_agent' => $tmp_comment->comment_agent,
+          		'comment_type' => $tmp_comment->comment_type,
+          		'comment_parent' => $tmp_comment->comment_parent,
+          		'comment_date_gmt' => $tmp_comment->comment_date_gmt,
+          		'comment_date_stamp' => time()
+        	), array(	
+				'%d', 	// blog_id
+				'%d', 	// site_id
+				'%s', 	// sort_terms
+				'%d', 	// blog_public
+				'%s', 	// comment_approved
+				'%d', 	// comment_id
+				'%d', 	// comment_post_id
+          		'%s',	// comment_post_permalink
+          		'%s',	// comment_author
+          		'%s',	// comment_author_email
+          		'%s',	// comment_author_IP
+          		'%s',	// comment_author_url
+          		'%d',	// comment_author_user_id
+          		'%s',	// comment_content
+          		'%s',	// comment_content_stripped
+          		'%s',	// comment_karma
+          		'%s',	// comment_agent
+          		'%s',	// comment_type
+          		'%s',	// comment_parent
+          		'%s',	// comment_date_gmt
+          		'%s'	// comment_date_stamp
+			)
+		);
   }
 }
 
 function comment_indexer_delete($tmp_comment_ID){
 	global $wpdb;
 	//delete site comment
-	$wpdb->query( "DELETE FROM " . $wpdb->base_prefix . "site_comments WHERE comment_id = '" . $tmp_comment_ID . "' AND blog_id = '" . $wpdb->blogid . "'" );
+	$wpdb->query( $wpdb->prepare("DELETE FROM " . $wpdb->base_prefix . "site_comments WHERE comment_id = %d AND blog_id = %d", $tmp_comment_ID, $wpdb->blogid ));
 }
 
 function comment_indexer_delete_by_site_comment_id($tmp_site_comment_ID, $tmp_blog_ID) {
 	global $wpdb;
 	//delete site comment
-	$wpdb->query( "DELETE FROM " . $wpdb->base_prefix . "site_comments WHERE site_comment_id = '" . $tmp_site_comment_ID . "'" );
+	$wpdb->query( $wpdb->prepare("DELETE FROM " . $wpdb->base_prefix . "site_comments WHERE site_comment_id = %d", $tmp_site_comment_ID));
 }
 
 function comment_indexer_public_update(){
 	global $wpdb;
 	if ( $_GET['updated'] == 'true' ) {
-		$wpdb->query("UPDATE " . $wpdb->base_prefix . "site_comments SET blog_public = '" . get_blog_status( $wpdb->blogid, 'public') . "' WHERE blog_id = '" . $wpdb->blogid . "' AND site_id = '" . $wpdb->siteid . "'");
+		//$wpdb->query("UPDATE " . $wpdb->base_prefix . "site_comments SET blog_public = '" . get_blog_status( $wpdb->blogid, 'public') . "' WHERE blog_id = '" . $wpdb->blogid . "' AND site_id = '" . $wpdb->siteid . "'");
+		$wpdb->update($wpdb->base_prefix . "site_comments",
+			array(
+				'blog_public'		=>	get_blog_status( $wpdb->blogid, 'public')
+			),
+			array(
+				'blog_id'			=>	$wpdb->blogid,
+				'site_id'			=>	$wpdb->siteid
+			), array('%s'), array('%d', '%d')
+		);
 	}
 }
 function comment_indexer_sort_terms_update(){
 	global $wpdb;
-	$wpdb->query("UPDATE " . $wpdb->base_prefix . "site_comments SET sort_terms = '" . comment_indexer_get_sort_terms($wpdb->blogid) . "' WHERE blog_id = '" . $wpdb->blogid . "' AND site_id = '" . $wpdb->siteid . "'");
+	//$wpdb->query("UPDATE " . $wpdb->base_prefix . "site_comments SET sort_terms = '" . comment_indexer_get_sort_terms($wpdb->blogid) . "' WHERE blog_id = '" . $wpdb->blogid . "' AND site_id = '" . $wpdb->siteid . "'");
+	
+	$wpdb->update($wpdb->base_prefix . "site_comments",
+		array(
+			'sort_terms'		=>	comment_indexer_get_sort_terms($wpdb->blogid)
+		),
+		array(
+			'blog_id'			=>	$wpdb->blogid,
+			'site_id'			=>	$wpdb->siteid
+		), array('%s'), array('%d', '%d')
+	);
 }
 
 function comment_indexer_change_remove($tmp_blog_ID){
 	global $wpdb, $current_user, $current_site;
 	//delete site posts
-	$query = "SELECT * FROM " . $wpdb->base_prefix . "site_comments WHERE blog_id = '" . $tmp_blog_ID . "' AND site_id = '" . $wpdb->siteid . "'";
-	$blog_site_comments = $wpdb->get_results( $query, ARRAY_A );
+	$blog_site_comments = $wpdb->get_results( $wpdb->prepare("SELECT * FROM " . $wpdb->base_prefix . "site_comments WHERE blog_id = %d AND site_id = %d", $tmp_blog_ID, $wpdb->siteid), ARRAY_A );
 	if (count($blog_site_comments) > 0){
 		foreach ($blog_site_comments as $blog_site_comment){
 			comment_indexer_delete_by_site_comment_id($blog_site_comment['site_comment_id'], $tmp_blog_ID);
