@@ -4,7 +4,8 @@ Authors: Paul Menard (Incsub)
 ----------------------------------------------------------------------
 
 = 1.0.9.1 = 
-2013:04/25: Security patch
+2013:04/25:
+- XSS prevention patches
 
 = 1.0.9 = 
 2012/08/12: Added support for Trash/Untrash comments.
