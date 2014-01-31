@@ -3,7 +3,7 @@
 Plugin Name: Comment Indexer
 Plugin URI: http://premium.wpmudev.org/project/comment-indexer
 Description: Indexes comments into a global table
-Author: Paul Menard (Incsub)
+Author: WPMU DEV
 Author URI: http://premium.wpmudev.org
 Version: 1.0.9.1
 Network: true
