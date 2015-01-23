@@ -62,37 +62,48 @@ add_action('blog_types_update', 'comment_indexer_sort_terms_update');
 //---Functions------------------------------------------------------------//
 //------------------------------------------------------------------------//
 
+global $comment_indexer_db_version;
+$comment_indexer_db_version = '1.0';
+
 function comment_indexer_global_install() {
 	global $wpdb;
+	global $comment_indexer_db_version;
 	
-    $comment_indexer_table1 = "CREATE TABLE IF NOT EXISTS `" . $wpdb->base_prefix . "site_comments` (
-      `site_comment_id` bigint(20) unsigned NOT NULL auto_increment,
-      `blog_id` bigint(20),
-      `site_id` bigint(20),
-      `sort_terms` TEXT,
-      `blog_public` int(2),
-      `comment_approved` VARCHAR(255),
-      `comment_id` bigint(20),
-      `comment_post_id` bigint(20),
-      `comment_post_permalink` TEXT,
-      `comment_author` VARCHAR(60),
-      `comment_author_email` VARCHAR(255),
-      `comment_author_IP` VARCHAR(255),
-      `comment_author_url` VARCHAR(50),
-      `comment_author_user_id` bigint(20),
-      `comment_content` TEXT,
-      `comment_content_stripped` TEXT,
-      `comment_karma` VARCHAR(255),
-      `comment_agent` VARCHAR(255),
-      `comment_type` VARCHAR(255),
-      `comment_parent` VARCHAR(255),
-      `comment_date_gmt` datetime NOT NULL default '0000-00-00 00:00:00',
-      `comment_date_stamp` VARCHAR(255),
-      PRIMARY KEY  (`site_comment_id`)
-    ) ENGINE=MyISAM  DEFAULT CHARSET=utf8;";
+	$table_name = $wpdb->prefix . "site_comments";
+	
+	$charset_collate = $wpdb->get_charset_collate();
 
-    $wpdb->query( $comment_indexer_table1 );
+	$sql = "CREATE TABLE IF NOT EXISTS $table_name (
+		site_comment_id bigint(20) unsigned NOT NULL auto_increment
+		blog_id biginit(20)
+		site_id biginit(20)
+		sort_terms TEXT
+		blog_public init(2)
+		comment_approved VARCHAR(20)
+		comment_id bigint(20)
+		comment_post_id bigint(20)
+		comment_post_permalink TEXT
+		comment_author VARCHAR(60)
+		comment_author_email VARCHAR(255)
+		comment_author_IP VARCHAR(255)
+		comment_author_url VARCHAR(50)
+		comment_author_user_id bigint(20)
+		comment_content TEXT
+		comment_content_stripped TEXT
+		comment_karma VARCHAR(255)
+		comment_agent VARCHAR(255)
+		comment_type VARCHAR(255)
+		comment_parent VARCHAR(255)
+		comment_date_gmt datetime NOT NULL default '0000-00-00 00:00:00'
+		comment_date_stamp VARCHAR(255)
+) $charset_collate;";
+
+	require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+	dbDelta( $sql );
+
+	add_option( 'comment_indexer_db_version', $comment_indexer_db_version );
 }
+
 
 function comment_indexer_update_comment_status($tmp_comment_ID, $tmp_comment_status){
     global $wpdb;
