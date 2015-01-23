@@ -72,6 +72,8 @@ function comment_indexer_global_install() {
 	$table_name = $wpdb->prefix . "site_comments";
 	
 	$charset_collate = $wpdb->get_charset_collate();
+	
+	//TODO, Update VARCHAR count on needed tables (comment_karma, comment_author etc)
 
 	$sql = "CREATE TABLE IF NOT EXISTS $table_name (
 		site_comment_id bigint(20) unsigned NOT NULL auto_increment
